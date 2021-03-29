@@ -25,36 +25,10 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Set up JDK 11
-      uses: actions/setup-java@v1
-      with:
-        java-version: ${{ matrix.java }}
-
-    - name: Cache SonarCloud packages
-      uses: actions/cache@v1
-      with:
-        path: ~/.sonar/cache
-        key: ${{ runner.os }}-sonar
-        restore-keys: ${{ runner.os }}-sonar
-
-    - name: Cache Gradle packages
-      uses: actions/cache@v1
-      with:
-        path: ~/.gradle/caches
-        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
-        restore-keys: ${{ runner.os }}-gradle
-
-    - name: Build and analyze
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: ./gradlew build test
-
     - name: Run Sonarqube
-      if: success() && github.repository == 'SAP/neonbee' # do not run on forks
+      # do not run on forks
+      if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      run: ./gradlew sonarqube
+        GITHUB_CONTEXT: ${{ toJson(github) }}
+      run: echo "$GITHUB_CONTEXT"
 
-    - name: Run javadoc
-      run: ./gradlew javadoc
